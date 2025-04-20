@@ -1,5 +1,6 @@
 // Copyright 2025 NNTU-CS
 #include <string>
+#include <iostream>
 #include <map>
 #include "tstack.h"
 
@@ -27,7 +28,12 @@ std::string infx2pstfx(const std::string& inf) {
                 output += ' ';
                 opetrs.pop();
             }
-            opetrs.pop();
+            if (!opetrs.isEmpty()) {
+                opetrs.pop();
+            } else {
+                std::cerr << "Error" << std::endl;
+                return "";
+            }
         } else {
             while (!opetrs.isEmpty() &&
                    ((curr == '+' || curr == '-') &&
@@ -65,7 +71,15 @@ int eval(const std::string& pref) {
             currNum.clear();
             --i;
         } else {
+            if (operands.isEmpty()) {
+                std::cerr << "Error" << std::endl;
+                return 0;
+            }
             int right = operands.top(); operands.pop();
+            if (operands.isEmpty()) {
+                std::cerr << "Error" << std::endl;
+                return 0;
+            }
             int left = operands.top(); operands.pop();
             int result;
             switch (curr) {
@@ -77,14 +91,21 @@ int eval(const std::string& pref) {
                   break;
                 case '/':
                     if (right == 0) {
-                        throw std::invalid_argument("Can't divide by zero");
+                        std::cerr << "Error" << std::endl;
+                        return 0;
                     }
                     result = left / right;
                     break;
-                default: throw std::invalid_argument("Unknown operator");
+                default: 
+                    std::cerr << "Error" << std::endl;
+                    return 0;
             }
             operands.push(result);
         }
     }
-  return operands.top();
+    if (operands.isEmpty()) {
+        std::cerr << "Error" << std::endl;
+        return 0;
+    }
+    return operands.top();
 }
