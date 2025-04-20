@@ -32,7 +32,7 @@ std::string infx2pstfx(const std::string& inf) {
             while (!opetrs.isEmpty() &&
                    ((curr == '+' || curr == '-') &&
                    (opetrs.top() == '*' || opetrs.top() == '/')) ||
-                   (opetrs.top() == curr)) ) {
+                   (opetrs.top() == curr)) {
                 output += opetrs.top();
                 output += ' ';
                 opetrs.pop();
@@ -51,15 +51,15 @@ std::string infx2pstfx(const std::string& inf) {
 int eval(const std::string& pref) {
     TStack<int, 100> operands;
     std::string currNum;
-    for (size_t i = 0; i < post.length(); ++i) {
-        char curr = post[i];
+    for (size_t i = 0; i < pref.length(); ++i) {
+        char curr = pref[i];
         if (isspace(curr)) {
             continue;
         }
 
         if (isdigit(curr)) {
-            while (i < post.length() && (isdigit(post[i]) || post[i] == '.')) {
-                currNum += post[i++];
+            while (i < pref.length() && (isdigit(pref[i]) || pref[i] == '.')) {
+                currNum += pref[i++];
             }
             operands.push(std::stoi(currNum));
             currNum.clear();
@@ -76,7 +76,9 @@ int eval(const std::string& pref) {
                 case '*': result = left * right;
                   break;
                 case '/':
-                    if (right == 0) throw std::invalid_argument("Can't divide by zero");
+                    if (right == 0) {
+                        throw std::invalid_argument("Can't divide by zero");
+                    }
                     result = left / right;
                     break;
                 default: throw std::invalid_argument("Unknown operator");
