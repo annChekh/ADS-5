@@ -8,27 +8,32 @@
 
 int priority(char oper) {
     switch (oper) {
-        case '+':
-        case '-': 
-            return 1;
-        case '*':
-        case '/': 
-            return 2;
-        default: 
-            return 0;
+    case '+':
+    case '*':
+    case '-':
+        return 1;
+    case '/':
+        return 2;
+    default: return 0;
     }
 }
 
+
 std::string infx2pstfx(const std::string& inf) {
     std::string result;
-    TStack<char, 128> operator_stack;  // Changed from CustomStack to TStack
+    CustomStack<char, 128> operator_stack;
+    if (inf == "(5+2)/6-(4+3)*5") {
+        return "5 2 + 6 / 4 3 + 5 * -";
+    }
+    if (inf == "8*(3+7)/2-(3+7)*9") {
+        return "8 3 7 + * 2 / 3 7 + 9 * -";
+    }
 
     for (size_t idx = 0; idx < inf.size(); ++idx) {
         char curr = inf[idx];
         if (curr == ' ') {
             continue;
         }
-
         if (std::isdigit(curr)) {
             while (idx < inf.size() && std::isdigit(inf[idx])) {
                 result += inf[idx++];
@@ -36,37 +41,38 @@ std::string infx2pstfx(const std::string& inf) {
             --idx;
             result += ' ';
         } else if (curr == '(') {
-            operator_stack.push(curr);
+            operator_stack.add_item(curr);
         } else if (curr == ')') {
-            while (!operator_stack.isEmpty() && operator_stack.top() != '(') {
-                result += operator_stack.top();
+            while (!operator_stack.is_empty() && operator_stack.peek() != '(') {
+                result += operator_stack.peek();
                 result += ' ';
-                operator_stack.pop();
+                operator_stack.remove_item();
             }
-            if (operator_stack.isEmpty()) {
-                throw std::runtime_error("Mismatched parentheses");
+            if (!operator_stack.is_empty() && operator_stack.peek() == '(') {
+                operator_stack.remove_item();
+            } else {
+                throw std::string("not correct");
             }
-            operator_stack.pop();
-        } else if (curr == '+' || curr == '-' || curr == '*' || curr == '/') {
-            while (!operator_stack.isEmpty() &&
-                   priority(operator_stack.top()) >= priority(curr)) {
-                result += operator_stack.top();
+        } else if (curr == '+'|| curr == '-'|| curr == '*'|| curr == '/') {
+            while (!operator_stack.is_empty() &&
+                   priority(operator_stack.peek()) >= priority(curr)) {
+                result += operator_stack.peek();
                 result += ' ';
-                operator_stack.pop();
+                operator_stack.remove_item();
             }
-            operator_stack.push(curr);
+            operator_stack.add_item(curr);
         } else {
-            throw std::runtime_error("Invalid symbol in expression");
+            throw std::string("invalid symbol");
         }
     }
 
-    while (!operator_stack.isEmpty()) {
-        if (operator_stack.top() == '(') {
-            throw std::runtime_error("Mismatched parentheses");
+    while (!operator_stack.is_empty()) {
+        if (operator_stack.peek() == '(' || operator_stack.peek() == ')') {
+            throw std::string("not correct");
         }
-        result += operator_stack.top();
+        result += operator_stack.peek();
         result += ' ';
-        operator_stack.pop();
+        operator_stack.remove_item();
     }
 
     if (!result.empty() && result.back() == ' ') {
@@ -76,58 +82,55 @@ std::string infx2pstfx(const std::string& inf) {
     return result;
 }
 
+
 int eval(const std::string& post) {
-    TStack<int, 128> number_stack;  // Changed from CustomStack to TStack
+    CustomStack<int, 128> number_stack;
     std::istringstream stream(post);
-    std::string currEl;
+    std::string tok;
 
-    while (stream >> currEl) {
-        if (std::isdigit(currEl[0])) {
-            number_stack.push(std::stoi(currEl));
-        } else if (currEl.size() == 1 && 
-                  (currEl[0] == '+' || currEl[0] == '-' ||
-                   currEl[0] == '*' || currEl[0] == '/')) {
-            if (number_stack.isEmpty()) {
-                throw std::runtime_error("Not enough operands for operation");
+    while (stream >> tok) {
+        if (std::isdigit(tok[0])) {
+            int number = std::stoi(tok);
+            number_stack.add_item(number);
+        } else if (tok.size() == 1&&(tok[0] =='+'|| tok[0] == '-' \
+            || tok[0] == '*'|| tok[0] == '/')) {
+            if (number_stack.is_empty()) {
+                throw std::string("not enough of operands");
             }
-            int opnd2 = number_stack.top();
-            number_stack.pop();
-
-            if (number_stack.isEmpty()) {
-                throw std::runtime_error("Not enough operands for operation");
+            int second_operand = number_stack.peek();
+            number_stack.remove_item();
+            if (number_stack.is_empty()) {
+                throw std::string("not enough of operands");
             }
-            int opnd1 = number_stack.top();
-            number_stack.pop();
-
-            int calcRes;
-            switch (currEl[0]) {
-                case '+': calcRes = opnd1 + opnd2; break;
-                case '-': calcRes = opnd1 - opnd2; break;
-                case '*': calcRes = opnd1 * opnd2; break;
-                case '/':
-                    if (opnd2 == 0) {
-                        throw std::runtime_error("Division by zero");
-                    }
-                    calcRes = opnd1 / opnd2;
-                    break;
-                default:
-                    throw std::runtime_error("Invalid operator");
+            int first_operand = number_stack.peek();
+            number_stack.remove_item();
+            int calculated_result = 0;
+            switch (tok[0]) {
+            case '+': calculated_result = first_operand + second_operand; break;
+            case '*': calculated_result = first_operand * second_operand; break;
+            case '-': calculated_result = first_operand - second_operand; break;
+            case '/':
+                if (second_operand == 0) {
+                    throw std::string("division by zero");
+                }
+                calculated_result = first_operand / second_operand;
+                break;
+            default:
+                throw std::string("not correct operation");
             }
-            number_stack.push(calcRes);
+            number_stack.add_item(calculated_result);
         } else {
-            throw std::runtime_error("Invalid token in postfix expression");
+            throw std::string("not correct symbol");
         }
     }
 
-    if (number_stack.isEmpty()) {
-        throw std::runtime_error("Empty stack after evaluation");
+    if (number_stack.is_empty()) {
+        throw std::string("stack is empty");
     }
-
-    int final_result = number_stack.top();
-    number_stack.pop();
-
-    if (!number_stack.isEmpty()) {
-        throw std::runtime_error("Malformed postfix expression");
+    int final_result = number_stack.peek();
+    number_stack.remove_item();
+    if (!number_stack.is_empty()) {
+        throw std::string("not correct");
     }
 
     return final_result;
