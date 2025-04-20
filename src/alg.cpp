@@ -20,7 +20,7 @@ bool opperator(char c) {
 }
 
 std::string infx2pstfx(const std::string& inf) {
-    TStack<char, 100> stack1;
+    TStack<char, 100> st1;
     std::ostringstream finall;
     bool flag = false;
     for (size_t i = 0; i < inf.size(); ++i) {
@@ -36,17 +36,31 @@ std::string infx2pstfx(const std::string& inf) {
             flag = true;
         } else {
                 flag = false;
-@@ -54,45 +54,48 @@
+            if (c == '(') {
+                st1.push(c);
+            } else if (c == ')') {
+                while (!st1.isEmpty() && st1.peek() != '(') {
+                    finall << ' ' << st1.pop();
+                }
+                if (!st1.isEmpty()) st1.pop();
+            } else if (opperator(c)) {
+                while (!st1.isEmpty() && st1.peek() != '(' &&
+                    prioritet(c) <= prioritet(st1.peek())) {
+                    finall << ' ' << st1.pop();
+                }
+                st1.push(c);
+            }
+        }
     }
-    while (!stack1.isEmpty()) {
-        finall << ' ' << stack1.pop();
+    while (!st1.isEmpty()) {
+        finall << ' ' << st1.pop();
     }
     return finall.str();
 }
 
-int eval(const std::string& post) {
+int eval(const std::string& pref) {
     TStack<int, 100> stack2;
-    std::istringstream stream(post);
+    std::istringstream stream(pref);
     std::string token;
     while (stream >> token) {
         if (std::isdigit(token[0])) {
