@@ -10,6 +10,7 @@ class TStack {
  private:
     std::array<T, size> data;
     int topIndex;
+
  public:
     TStack() : topIndex(-1) {}
 
