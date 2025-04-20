@@ -60,7 +60,8 @@ int eval(const std::string& post) {
     std::string currEl;
 
     while (iss >> currEl) {
-        if (std::isdigit(currEl[0]) || (currEl.size() > 1 && currEl[0] == '-')) {
+        if (std::isdigit(currEl[0]) ||
+            (currEl.size() > 1 && currEl[0] == '-')) {
             stack.Push(std::stoi(currEl));
         } else if (currEl.size() == 1 && isOperator(currEl[0])) {
             int b = stack.Top(); stack.Pop();
@@ -69,10 +70,10 @@ int eval(const std::string& post) {
             switch (currEl[0]) {
                 case '+': res = a + b; break;
                 case '-': res = a - b; break;
-                case '': res = a  b; break;
-                case '/': 
+                case '*': res = a * b; break;
+                case '/':
                     if (b == 0) throw std::runtime_error("Деление на ноль");
-                    res = a / b; 
+                    res = a / b;
                     break;
             }
             stack.Push(res);
