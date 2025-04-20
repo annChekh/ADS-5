@@ -29,8 +29,9 @@ std::string infx2pstfx(const std::string& inf) {
             }
             opetrs.pop();
         } else {
-            while (!opetrs.isEmpty() && 
-                   ((curr == '+' || curr == '-') && (opetrs.top() == '*' || opetrs.top() == '/')) ||
+            while (!opetrs.isEmpty() &&
+                   ((curr == '+' || curr == '-') &&
+                   (opetrs.top() == '*' || opetrs.top() == '/')) ||
                    (opetrs.top() == curr)) ) {
                 output += opetrs.top();
                 output += ' ';
@@ -74,9 +75,9 @@ int eval(const std::string& pref) {
                   break;
                 case '*': result = left * right;
                   break;
-                case '/': 
+                case '/':
                     if (right == 0) throw std::invalid_argument("Can't divide by zero");
-                    result = left / right; 
+                    result = left / right;
                     break;
                 default: throw std::invalid_argument("Unknown operator");
             }
