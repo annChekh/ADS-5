@@ -84,8 +84,9 @@ int eval(const std::string& post) {
     while (stream >> currEl) {
         if (std::isdigit(currEl[0])) {
             number_stack.add_item(std::stoi(currEl));
-        } else if (currEl.size() == 1 && (currEl[0] == '+' || currEl[0] == '-' ||
-                                        currEl[0] == '*' || currEl[0] == '/')) {
+        } else if (currEl.size() == 1 &&
+          (currEl[0] == '+' || currEl[0] == '-' ||
+           currEl[0] == '*' || currEl[0] == '/')) {
             if (number_stack.is_empty()) {
                 throw std::runtime_error("Not enough operands for operation");
             }
