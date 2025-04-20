@@ -3,57 +3,60 @@
 #include <map>
 #include <sstream>
 #include <cctype>
-#include <stdexcept>
 #include "tstack.h"
 
 std::string infx2pstfx(const std::string& inf) {
-    TStack<char, 100> opetrs;
-    std::string output;
-    std::string currNum;
-    for (size_t i = 0; i < inf.length(); ++i) {
-        char curr = inf[i];
-        if (isspace(curr)) {
-            continue;
+    TStack<char, 100> stack1;
+    std::ostringstream finall;
+    bool flag = false;
+    auto prioritet = [](char op) {
+        switch (op) {
+            case '+': case '-': return 1;
+            case '*': case '/': return 2;
+            default: return 0;
         }
-        if (isdigit(curr)) {
-            while (i < inf.length() && (isdigit(inf[i]) || inf[i] == '.')) {
-                currNum += inf[i++];
-            }
-            output += currNum + " ";
-            currNum.clear();
-            --i;
-        } else if (curr == '(') {
-            opetrs.push('(');
-        } else if (curr == ')') {
-            while (!opetrs.isEmpty() && opetrs.top() != '(') {
-                output += opetrs.top();
-                output += ' ';
-                opetrs.pop();
-            }
-            if (!opetrs.isEmpty()) {
-                opetrs.pop();
+    };
+
+    auto opperator = [](char c) {
+        return c == '+' || c == '-' || c == '*' || c == '/';
+    };
+
+    for (size_t i = 0; i < inf.size(); ++i) {
+        char c = inf[i];
+        if (c == ' ') continue;
+
+        if (isdigit(c)) {
+            if (flag) {
+                finall << c;
             } else {
-                std::cerr << "Error" << std::endl;
-                return "";
+                if (!finall.str().empty()) finall << ' ';
+                finall << c;
             }
+            flag = true;
         } else {
-            while (!opetrs.isEmpty() &&
-                   ((curr == '+' || curr == '-') &&
-                   (opetrs.top() == '*' || opetrs.top() == '/')) ||
-                   (opetrs.top() == curr)) {
-                output += opetrs.top();
-                output += ' ';
-                opetrs.pop();
+            flag = false;
+            if (c == '(') {
+                stack1.push(c);
+            } else if (c == ')') {
+                while (!stack1.isEmpty() && stack1.top() != '(') {
+                    finall << ' ' << stack1.top(); stack1.pop();
+                }
+                if (!stack1.isEmpty()) stack1.pop();
+            } else if (opperator(c)) {
+                while (!stack1.isEmpty() && stack1.top() != '(' &&
+                       prioritet(c) <= prioritet(stack1.top())) {
+                    finall << ' ' << stack1.top(); stack1.pop();
+                }
+                stack1.push(c);
             }
-            opetrs.push(curr);
         }
     }
-    while (!opetrs.isEmpty()) {
-        output += opetrs.top();
-        output += ' ';
-        opetrs.pop();
+
+    while (!stack1.isEmpty()) {
+        finall << ' ' << stack1.top(); stack1.pop();
     }
-    return output;
+
+    return finall.str();
 }
 
 int eval(const std::string& pref) {
@@ -75,12 +78,9 @@ int eval(const std::string& pref) {
             }
             int op1 = stack2.top(); stack2.pop();
             switch (currEl[0]) {
-                case '+': stack2.push(op1 + op2);
-                    break;
-                case '-': stack2.push(op1 - op2);
-                    break;
-                case '*': stack2.push(op1 * op2);
-                    break;
+                case '+': stack2.push(op1 + op2); break;
+                case '-': stack2.push(op1 - op2); break;
+                case '*': stack2.push(op1 * op2); break;
                 case '/':
                     if (op2 == 0) {
                         std::cerr << "Error" << std::endl;
@@ -94,6 +94,7 @@ int eval(const std::string& pref) {
             }
         }
     }
+
     if (stack2.isEmpty()) {
         std::cerr << "Error" << std::endl;
         return 0;
