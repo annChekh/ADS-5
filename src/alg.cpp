@@ -6,12 +6,12 @@
 #include <map>
 #include "tstack.h"
 
-
 int prioritet(char op) {
     switch (op) {
         case '+': case '-': return 1;
         case '*': case '/': return 2;
-        default: return 0;
+        default: 
+            return 0;
     }
 }
 
@@ -75,9 +75,12 @@ int eval(const std::string& post) {
             }
             int oper1 = stack2.pop();
             switch (token[0]) {
-                case '+': stack2.push(oper1 + oper2); break;
-                case '-': stack2.push(oper1 - oper2); break;
-                case '*': stack2.push(oper1 * oper2); break;
+                case '+': stack2.push(oper1 + oper2);
+                    break;
+                case '-': stack2.push(oper1 - oper2);
+                    break;
+                case '*': stack2.push(oper1 * oper2);
+                    break;
                 case '/':
                     if (oper2 == 0) {
                         throw std::runtime_error("Division by zero");
