@@ -6,14 +6,13 @@
 #include <map>
 #include "tstack.h"
 
+
 int priority(char oper) {
     switch (oper) {
     case '+':
     case '*':
-    case '-':
-        return 1;
-    case '/':
-        return 2;
+    case '-': return 1;
+    case '/': return 2;
     default: return 0;
     }
 }
