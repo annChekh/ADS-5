@@ -10,7 +10,7 @@ int prioritet(char op) {
     switch (op) {
         case '+': case '-': return 1;
         case '*': case '/': return 2;
-        default: 
+        default:
             return 0;
     }
 }
@@ -20,7 +20,7 @@ bool opperator(char c) {
 }
 
 std::string infx2pstfx(const std::string& inf) {
-    TStack<char, 100> stack1;
+    TStack<char, 100> st1;
     std::ostringstream finall;
     bool flag = false;
     for (size_t i = 0; i < inf.size(); ++i) {
@@ -37,64 +37,64 @@ std::string infx2pstfx(const std::string& inf) {
         } else {
                 flag = false;
             if (c == '(') {
-                stack1.push(c);
+                st1.push(c);
             } else if (c == ')') {
-                while (!stack1.isEmpty() && stack1.peek() != '(') {
-                    finall << ' ' << stack1.pop();
+                while (!st1.isEmpty() && st1.peek() != '(') {
+                    finall << ' ' << st1.pop();
                 }
-                if (!stack1.isEmpty()) stack1.pop();
+                if (!st1.isEmpty()) st1.pop();
             } else if (opperator(c)) {
-                while (!stack1.isEmpty() && stack1.peek() != '(' &&
-                    prioritet(c) <= prioritet(stack1.peek())) {
-                    finall << ' ' << stack1.pop();
+                while (!st1.isEmpty() && st1.peek() != '(' &&
+                    prioritet(c) <= prioritet(st1.peek())) {
+                    finall << ' ' << st1.pop();
                 }
-                stack1.push(c);
+                st1.push(c);
             }
         }
     }
-    while (!stack1.isEmpty()) {
-        finall << ' ' << stack1.pop();
+    while (!st1.isEmpty()) {
+        finall << ' ' << st1.pop();
     }
     return finall.str();
 }
 
-int eval(const std::string& post) {
-    TStack<int, 100> stack2;
-    std::istringstream stream(post);
+int eval(const std::string& pref) {
+    TStack<int, 100> st2;
+    std::istringstream stream(pref);
     std::string token;
     while (stream >> token) {
         if (std::isdigit(token[0])) {
-            stack2.push(std::stoi(token));
+            st2.push(std::stoi(token));
         } else if (opperator(token[0]) && token.size() == 1) {
-            if (stack2.isEmpty()) {
+            if (st2.isEmpty()) {
                 throw std::invalid_argument("Not enough operands");
             }
-            int oper2 = stack2.pop();
-            if (stack2.isEmpty()) {
+            int op2 = st2.pop();
+            if (st2.isEmpty()) {
                 throw std::invalid_argument("Not enough operands");
             }
-            int oper1 = stack2.pop();
+            int op1 = op2.pop();
             switch (token[0]) {
-                case '+': stack2.push(oper1 + oper2);
+                case '+': op2.push(op1 + op2);
                     break;
-                case '-': stack2.push(oper1 - oper2);
+                case '-': st2.push(op1 - op2);
                     break;
-                case '*': stack2.push(oper1 * oper2);
+                case '*': st2.push(op1 * op2);
                     break;
                 case '/':
-                    if (oper2 == 0) {
-                        throw std::runtime_error("Division by zero");
+                    if (op2 == 0) {
+                        throw std::runtime_error("Cant devide by zero");
                     }
-                stack2.push(oper1 / oper2);
+                st2.push(op1 / op2);
                 break;
             }
         }
     }
-    if (stack2.isEmpty()) {
+    if (st2.isEmpty()) {
         throw std::invalid_argument("Empty expression");
     }
-    int result = stack2.pop();
-    if (!stack2.isEmpty()) {
+    int result = st2.pop();
+    if (!st2.isEmpty()) {
         throw std::invalid_argument("Too many operands");
     }
     return result;
