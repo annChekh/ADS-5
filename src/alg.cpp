@@ -1,5 +1,6 @@
 // Copyright 2025 NNTU-CS
 #include <string>
+#include <iostream> 
 #include <map>
 #include <sstream>
 #include <cctype>
