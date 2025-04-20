@@ -1,7 +1,8 @@
 // Copyright 2025 NNTU-CS
 #include <string>
-#include <iostream>
 #include <map>
+#include <sstream>
+#include <iostream>
 #include "tstack.h"
 
 std::string infx2pstfx(const std::string& inf) {
@@ -55,57 +56,51 @@ std::string infx2pstfx(const std::string& inf) {
 }
 
 int eval(const std::string& pref) {
-    TStack<int, 100> operands;
-    std::string currNum;
-    for (size_t i = 0; i < pref.length(); ++i) {
-        char curr = pref[i];
-        if (isspace(curr)) {
-            continue;
-        }
-
-        if (isdigit(curr)) {
-            while (i < pref.length() && (isdigit(pref[i]) || pref[i] == '.')) {
-                currNum += pref[i++];
-            }
-            operands.push(std::stoi(currNum));
-            currNum.clear();
-            --i;
-        } else {
-            if (operands.isEmpty()) {
+    TStack<int, 100> stack2;
+    std::istringstream stream(pref);
+    std::string currEl;
+    while (stream >> currEl) {
+        if (std::isdigit(currEl[0])) {
+            stack2.push(std::stoi(currEl));
+        } else if (opperator(currEl[0]) && currEl.size() == 1) {
+            if (stack2.isEmpty()) {
                 std::cerr << "Error" << std::endl;
                 return 0;
             }
-            int right = operands.top(); operands.pop();
-            if (operands.isEmpty()) {
+            int op2 = stack2.top(); stack2.pop();
+            if (stack2.isEmpty()) {
                 std::cerr << "Error" << std::endl;
                 return 0;
             }
-            int left = operands.top(); operands.pop();
-            int result;
-            switch (curr) {
-                case '+': result = left + right;
-                  break;
-                case '-': result = left - right;
-                  break;
-                case '*': result = left * right;
-                  break;
+            int op1 = stack2.top(); stack2.pop();
+            switch (currEl[0]) {
+                case '+': stack2.push(op1 + op2);
+                    break;
+                case '-': stack2.push(op1 - op2);
+                    break;
+                case '*': stack2.push(op1 * op2);
+                    break;
                 case '/':
-                    if (right == 0) {
+                    if (op2 == 0) {
                         std::cerr << "Error" << std::endl;
                         return 0;
                     }
-                    result = left / right;
+                    stack2.push(op1 / op2);
                     break;
-                default: 
+                default:
                     std::cerr << "Error" << std::endl;
                     return 0;
             }
-            operands.push(result);
         }
     }
-    if (operands.isEmpty()) {
+    if (stack2.isEmpty()) {
         std::cerr << "Error" << std::endl;
         return 0;
     }
-    return operands.top();
+    int result = stack2.top(); stack2.pop();
+    if (!stack2.isEmpty()) {
+        std::cerr << "Error" << std::endl;
+        return 0;
+    }
+    return result;
 }
