@@ -1,50 +1,53 @@
 // Copyright 2021 NNTU-CS
+#include <string>
+#include <array>
+#include <stdexcept>
 #ifndef INCLUDE_TSTACK_H_
 #define INCLUDE_TSTACK_H_
 
 template<typename T, int size>
-class TStack {
-private:
-    T* data;
-    int capacity;
-    int top;
-    void resize() {
-        capacity *= 2;
-        T* newData = new T[capacity];
-        for (int i = 0; i <= top; ++i) {
-            newData[i] = data[i];
-        }
-        delete[] data;
-        data = newData;
+class TStack  {
+ private:
+    std::array<T, max_size> items;
+    int current_index;
+
+ public:
+    constexpr CustomStack() : current_index(-1) {}
+
+    bool is_empty() const {
+        return current_index < 0;
     }
 
-public:
-    TStack() : capacity(10), top(-1) {
-        data = new T[capacity];
+    bool is_full() const {
+        return current_index >= max_size - 1;
     }
-    ~TStack() {
-        delete[] data;
-    }
-    void push(const T& value) {
-        if (top + 1 >= capacity) {
-            resize();
+
+    void add_item(const T& value) {
+        if (is_full()) {
+            throw std::string("Stack is full");
         }
-        data[++top] = value;
+        items.at(++current_index) = value;
     }
-    void pop() {
-        if (top < 0) {
-            throw std::underflow_error("Stack underflow");
+
+    void remove_item() {
+        if (is_empty()) {
+            throw std::string("Stack is empty");
         }
-        --top;
+        --current_index;
     }
-    T top() const {
-        if (top < 0) {
-            throw std::underflow_error("Stack is empty");
+
+    const T& peek() const {
+        if (is_empty()) {
+            throw std::string("Stack is empty");
         }
-        return data[top];
+        return items.at(current_index);
     }
-    bool isEmpty() const {
-        return top == -1;
+
+    T& peek() {
+        if (is_empty()) {
+            throw std::string("Stack is empty");
+        }
+        return items.at(current_index);  // Безопасный доступ к элементу массива
     }
 };
 #endif  // INCLUDE_TSTACK_H_
