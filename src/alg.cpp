@@ -1,60 +1,79 @@
 // Copyright 2025 NNTU-CS
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <map>
-#include <sstream>
-#include <cctype>
-#include <stdexcept>
 #include "tstack.h"
 
-int prioritet(char op) {
-    switch (op) {
-        case '+': case '-': return 1;
-        case '*': case '/': return 2;
-        default: return 0;
+int priority(char oper) {
+    switch (oper) {
+        case '+':
+        case '-':
+            return 1;
+        case '*':
+        case '/':
+            return 2;
+        default:
+            return 0;
     }
-}
-
-bool opperator(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '/';
 }
 
 std::string infx2pstfx(const std::string& inf) {
-    TStack<char, 100> stack1;
-    std::ostringstream finall;
-    bool flag = false;
-    for (size_t i = 0; i < inf.size(); ++i) {
-        char c = inf[i];
-        if (c == ' ') continue;
-        if (isdigit(c)) {
-            if (flag) {
-                finall << c;
-            } else {
-                if (!finall.str().empty()) finall << ' ';
-                finall << c;
+    std::string result;
+    CustomStack<char, 128> operator_stack;
+
+    for (size_t idx = 0; idx < inf.size(); ++idx) {
+        char curr = inf[idx];
+        if (curr == ' ') {
+            continue;
+        }
+
+        if (std::isdigit(curr)) {
+            while (idx < inf.size() && std::isdigit(inf[idx])) {
+                result += inf[idx++];
             }
-            flag = true;
+            --idx;
+            result += ' ';
+        } else if (curr == '(') {
+            operator_stack.add_item(curr);
+        } else if (curr == ')') {
+            while (!operator_stack.is_empty() && operator_stack.peek() != '(') {
+                result += operator_stack.peek();
+                result += ' ';
+                operator_stack.remove_item();
+            }
+            if (operator_stack.is_empty()) {
+                throw std::runtime_error("Mismatched parentheses");
+            }
+            operator_stack.remove_item();
+        } else if (curr == '+' || curr == '-' || curr == '*' || curr == '/') {
+            while (!operator_stack.is_empty() &&
+                   priority(operator_stack.peek()) >= priority(curr)) {
+                result += operator_stack.peek();
+                result += ' ';
+                operator_stack.remove_item();
+            }
+            operator_stack.add_item(curr);
         } else {
-                flag = false;
-            if (c == '(') {
-                stack1.push(c);
-            } else if (c == ')') {
-                while (!stack1.isEmpty() && stack1.peek() != '(') {
-                    finall << ' ' << stack1.pop();
-                }
-                if (!stack1.isEmpty()) stack1.pop();
-            } else if (opperator(c)) {
-                while (!stack1.isEmpty() && stack1.peek() != '(' &&
-                    prioritet(c) <= prioritet(stack1.peek())) {
-                    finall << ' ' << stack1.pop();
-                }
-                stack1.push(c);
-            }
+            throw std::runtime_error("Invalid symbol in expression");
         }
     }
-    while (!stack1.isEmpty()) {
-        finall << ' ' << stack1.pop();
+
+    while (!operator_stack.is_empty()) {
+        if (operator_stack.peek() == '(') {
+            throw std::runtime_error("Mismatched parentheses");
+        }
+        result += operator_stack.peek();
+        result += ' ';
+        operator_stack.remove_item();
     }
-    return finall.str();
+
+    if (!result.empty() && result.back() == ' ') {
+        result.pop_back();
+    }
+
+    return result;
 }
 
 int eval(const std::string& post) {
@@ -65,9 +84,8 @@ int eval(const std::string& post) {
     while (stream >> currEl) {
         if (std::isdigit(currEl[0])) {
             number_stack.add_item(std::stoi(currEl));
-        } 
-        else if (currEl.size() == 1 && (currEl[0] == '+' || currEl[0] == '-' || 
-                                     currEl[0] == '*' || currEl[0] == '/')) {
+        } else if (currEl.size() == 1 && (currEl[0] == '+' || currEl[0] == '-' ||
+                                        currEl[0] == '*' || currEl[0] == '/')) {
             if (number_stack.is_empty()) {
                 throw std::runtime_error("Not enough operands for operation");
             }
@@ -82,14 +100,14 @@ int eval(const std::string& post) {
 
             int calcRes;
             switch (currEl[0]) {
-                case '+': 
-                    calcRes = opnd1 + opnd2; 
+                case '+':
+                    calcRes = opnd1 + opnd2;
                     break;
-                case '-': 
-                    calcRes = opnd1 - opnd2; 
+                case '-':
+                    calcRes = opnd1 - opnd2;
                     break;
-                case '*': 
-                    calcRes = opnd1 * opnd2; 
+                case '*':
+                    calcRes = opnd1 * opnd2;
                     break;
                 case '/':
                     if (opnd2 == 0) {
@@ -101,8 +119,7 @@ int eval(const std::string& post) {
                     throw std::runtime_error("Invalid operator");
             }
             number_stack.add_item(calcRes);
-        } 
-        else {
+        } else {
             throw std::runtime_error("Invalid token in postfix expression");
         }
     }
