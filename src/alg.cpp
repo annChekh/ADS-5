@@ -7,130 +7,92 @@
 #include "tstack.h"
 
 
-int priority(char oper) {
-    switch (oper) {
-    case '+':
-    case '*':
-    case '-': return 1;
-    case '/': return 2;
-    default: return 0;
+int prioritet(char op) {
+    switch (op) {
+        case '+': case '-': return 1;
+        case '*': case '/': return 2;
+        default: return 0;
     }
 }
 
+bool opperator(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/';
+}
 
 std::string infx2pstfx(const std::string& inf) {
-    std::string result;
-    CustomStack<char, 128> operator_stack;
-    if (inf == "(5+2)/6-(4+3)*5") {
-        return "5 2 + 6 / 4 3 + 5 * -";
-    }
-    if (inf == "8*(3+7)/2-(3+7)*9") {
-        return "8 3 7 + * 2 / 3 7 + 9 * -";
-    }
-
-    for (size_t idx = 0; idx < inf.size(); ++idx) {
-        char curr = inf[idx];
-        if (curr == ' ') {
-            continue;
-        }
-        if (std::isdigit(curr)) {
-            while (idx < inf.size() && std::isdigit(inf[idx])) {
-                result += inf[idx++];
-            }
-            --idx;
-            result += ' ';
-        } else if (curr == '(') {
-            operator_stack.add_item(curr);
-        } else if (curr == ')') {
-            while (!operator_stack.is_empty() && operator_stack.peek() != '(') {
-                result += operator_stack.peek();
-                result += ' ';
-                operator_stack.remove_item();
-            }
-            if (!operator_stack.is_empty() && operator_stack.peek() == '(') {
-                operator_stack.remove_item();
+    TStack<char, 100> stack1;
+    std::ostringstream finall;
+    bool flag = false;
+    for (size_t i = 0; i < inf.size(); ++i) {
+        char c = inf[i];
+        if (c == ' ') continue;
+        if (isdigit(c)) {
+            if (flag) {
+                finall << c;
             } else {
-                throw std::string("not correct");
+                if (!finall.str().empty()) finall << ' ';
+                finall << c;
             }
-        } else if (curr == '+'|| curr == '-'|| curr == '*'|| curr == '/') {
-            while (!operator_stack.is_empty() &&
-                   priority(operator_stack.peek()) >= priority(curr)) {
-                result += operator_stack.peek();
-                result += ' ';
-                operator_stack.remove_item();
-            }
-            operator_stack.add_item(curr);
+            flag = true;
         } else {
-            throw std::string("invalid symbol");
+                flag = false;
+            if (c == '(') {
+                stack1.push(c);
+            } else if (c == ')') {
+                while (!stack1.isEmpty() && stack1.peek() != '(') {
+                    finall << ' ' << stack1.pop();
+                }
+                if (!stack1.isEmpty()) stack1.pop();
+            } else if (opperator(c)) {
+                while (!stack1.isEmpty() && stack1.peek() != '(' &&
+                    prioritet(c) <= prioritet(stack1.peek())) {
+                    finall << ' ' << stack1.pop();
+                }
+                stack1.push(c);
+            }
         }
     }
-
-    while (!operator_stack.is_empty()) {
-        if (operator_stack.peek() == '(' || operator_stack.peek() == ')') {
-            throw std::string("not correct");
-        }
-        result += operator_stack.peek();
-        result += ' ';
-        operator_stack.remove_item();
+    while (!stack1.isEmpty()) {
+        finall << ' ' << stack1.pop();
     }
-
-    if (!result.empty() && result.back() == ' ') {
-        result.pop_back();
-    }
-
-    return result;
+    return finall.str();
 }
 
-
 int eval(const std::string& post) {
-    CustomStack<int, 128> number_stack;
+    TStack<int, 100> stack2;
     std::istringstream stream(post);
-    std::string tok;
-
-    while (stream >> tok) {
-        if (std::isdigit(tok[0])) {
-            int number = std::stoi(tok);
-            number_stack.add_item(number);
-        } else if (tok.size() == 1&&(tok[0] =='+'|| tok[0] == '-' \
-            || tok[0] == '*'|| tok[0] == '/')) {
-            if (number_stack.is_empty()) {
-                throw std::string("not enough of operands");
+    std::string token;
+    while (stream >> token) {
+        if (std::isdigit(token[0])) {
+            stack2.push(std::stoi(token));
+        } else if (opperator(token[0]) && token.size() == 1) {
+            if (stack2.isEmpty()) {
+                throw std::invalid_argument("Not enough operands");
             }
-            int second_operand = number_stack.peek();
-            number_stack.remove_item();
-            if (number_stack.is_empty()) {
-                throw std::string("not enough of operands");
+            int oper2 = stack2.pop();
+            if (stack2.isEmpty()) {
+                throw std::invalid_argument("Not enough operands");
             }
-            int first_operand = number_stack.peek();
-            number_stack.remove_item();
-            int calculated_result = 0;
-            switch (tok[0]) {
-            case '+': calculated_result = first_operand + second_operand; break;
-            case '*': calculated_result = first_operand * second_operand; break;
-            case '-': calculated_result = first_operand - second_operand; break;
-            case '/':
-                if (second_operand == 0) {
-                    throw std::string("division by zero");
-                }
-                calculated_result = first_operand / second_operand;
+            int oper1 = stack2.pop();
+            switch (token[0]) {
+                case '+': stack2.push(oper1 + oper2); break;
+                case '-': stack2.push(oper1 - oper2); break;
+                case '*': stack2.push(oper1 * oper2); break;
+                case '/':
+                    if (oper2 == 0) {
+                        throw std::runtime_error("Division by zero");
+                    }
+                stack2.push(oper1 / oper2);
                 break;
-            default:
-                throw std::string("not correct operation");
             }
-            number_stack.add_item(calculated_result);
-        } else {
-            throw std::string("not correct symbol");
         }
     }
-
-    if (number_stack.is_empty()) {
-        throw std::string("stack is empty");
+    if (stack2.isEmpty()) {
+        throw std::invalid_argument("Empty expression");
     }
-    int final_result = number_stack.peek();
-    number_stack.remove_item();
-    if (!number_stack.is_empty()) {
-        throw std::string("not correct");
+    int result = stack2.pop();
+    if (!stack2.isEmpty()) {
+        throw std::invalid_argument("Too many operands");
     }
-
-    return final_result;
+    return result;
 }
