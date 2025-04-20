@@ -58,40 +58,65 @@ std::string infx2pstfx(const std::string& inf) {
 }
 
 int eval(const std::string& post) {
-    TStack<int, 100> stack2;
+    CustomStack<int, 128> number_stack;
     std::istringstream stream(post);
-    std::string token;
-    while (stream >> token) {
-        if (std::isdigit(token[0])) {
-            stack2.push(std::stoi(token));
-        } else if (opperator(token[0]) && token.size() == 1) {
-            if (stack2.isEmpty()) {
-                throw std::invalid_argument("Not enough operands");
+    std::string currEl;
+
+    while (stream >> currEl) {
+        if (std::isdigit(currEl[0])) {
+            number_stack.add_item(std::stoi(currEl));
+        } 
+        else if (currEl.size() == 1 && (currEl[0] == '+' || currEl[0] == '-' || 
+                                     currEl[0] == '*' || currEl[0] == '/')) {
+            if (number_stack.is_empty()) {
+                throw std::runtime_error("Not enough operands for operation");
             }
-            int oper2 = stack2.pop();
-            if (stack2.isEmpty()) {
-                throw std::invalid_argument("Not enough operands");
+            int opnd2 = number_stack.peek();
+            number_stack.remove_item();
+
+            if (number_stack.is_empty()) {
+                throw std::runtime_error("Not enough operands for operation");
             }
-            int oper1 = stack2.pop();
-            switch (token[0]) {
-                case '+': stack2.push(oper1 + oper2); break;
-                case '-': stack2.push(oper1 - oper2); break;
-                case '*': stack2.push(oper1 * oper2); break;
+            int opnd1 = number_stack.peek();
+            number_stack.remove_item();
+
+            int calcRes;
+            switch (currEl[0]) {
+                case '+': 
+                    calcRes = opnd1 + opnd2; 
+                    break;
+                case '-': 
+                    calcRes = opnd1 - opnd2; 
+                    break;
+                case '*': 
+                    calcRes = opnd1 * opnd2; 
+                    break;
                 case '/':
-                    if (oper2 == 0) {
+                    if (opnd2 == 0) {
                         throw std::runtime_error("Division by zero");
                     }
-                stack2.push(oper1 / oper2);
-                break;
+                    calcRes = opnd1 / opnd2;
+                    break;
+                default:
+                    throw std::runtime_error("Invalid operator");
             }
+            number_stack.add_item(calcRes);
+        } 
+        else {
+            throw std::runtime_error("Invalid token in postfix expression");
         }
     }
-    if (stack2.isEmpty()) {
-        throw std::invalid_argument("Empty expression");
+
+    if (number_stack.is_empty()) {
+        throw std::runtime_error("Empty stack after evaluation");
     }
-    int result = stack2.pop();
-    if (!stack2.isEmpty()) {
-        throw std::invalid_argument("Too many operands");
+
+    int final_result = number_stack.peek();
+    number_stack.remove_item();
+
+    if (!number_stack.is_empty()) {
+        throw std::runtime_error("Malformed postfix expression");
     }
-    return result;
+
+    return final_result;
 }
