@@ -59,42 +59,42 @@ std::string infx2pstfx(const std::string& inf) {
 }
 
 int eval(const std::string& pref) {
-    TStack<int, 100> st2;
+    TStack<int, 100> stack2;
     std::istringstream stream(pref);
     std::string token;
     while (stream >> token) {
         if (std::isdigit(token[0])) {
-            st2.push(std::stoi(token));
+            stack2.push(std::stoi(token));
         } else if (opperator(token[0]) && token.size() == 1) {
-            if (st2.isEmpty()) {
+            if (stack2.isEmpty()) {
                 throw std::invalid_argument("Not enough operands");
             }
-            int op2 = st2.pop();
-            if (st2.isEmpty()) {
+            int oper2 = stack2.pop();
+            if (stack2.isEmpty()) {
                 throw std::invalid_argument("Not enough operands");
             }
-            int op1 = op2.pop();
+            int oper1 = stack2.pop();
             switch (token[0]) {
-                case '+': op2.push(op1 + op2);
+                case '+': stack2.push(oper1 + oper2);
                     break;
-                case '-': st2.push(op1 - op2);
+                case '-': stack2.push(oper1 - oper2);
                     break;
-                case '*': st2.push(op1 * op2);
+                case '*': stack2.push(oper1 * oper2);
                     break;
                 case '/':
-                    if (op2 == 0) {
-                        throw std::runtime_error("Cant devide by zero");
+                    if (oper2 == 0) {
+                        throw std::runtime_error("Division by zero");
                     }
-                st2.push(op1 / op2);
+                stack2.push(oper1 / oper2);
                 break;
             }
         }
     }
-    if (st2.isEmpty()) {
+    if (stack2.isEmpty()) {
         throw std::invalid_argument("Empty expression");
     }
-    int result = st2.pop();
-    if (!st2.isEmpty()) {
+    int result = stack2.pop();
+    if (!stack2.isEmpty()) {
         throw std::invalid_argument("Too many operands");
     }
     return result;
