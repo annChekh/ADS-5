@@ -1,109 +1,82 @@
 // Copyright 2025 NNTU-CS
 #include <string>
-#include <iostream> 
 #include <map>
 #include <sstream>
 #include <cctype>
 #include "tstack.h"
-
-std::string infx2pstfx(const std::string& inf) {
-    TStack<char, 100> stack1;
-    std::ostringstream finall;
-    bool flag = false;
-    auto prioritet = [](char op) {
-        switch (op) {
-            case '+': case '-': return 1;
-            case '*': case '/': return 2;
-            default: return 0;
-        }
-    };
-
-    auto opperator = [](char c) {
-        return c == '+' || c == '-' || c == '*' || c == '/';
-    };
-
-    for (size_t i = 0; i < inf.size(); ++i) {
-        char c = inf[i];
-        if (c == ' ') continue;
-
-        if (isdigit(c)) {
-            if (flag) {
-                finall << c;
-            } else {
-                if (!finall.str().empty()) finall << ' ';
-                finall << c;
-            }
-            flag = true;
-        } else {
-            flag = false;
-            if (c == '(') {
-                stack1.push(c);
-            } else if (c == ')') {
-                while (!stack1.isEmpty() && stack1.top() != '(') {
-                    finall << ' ' << stack1.top(); stack1.pop();
-                }
-                if (!stack1.isEmpty()) stack1.pop();
-            } else if (opperator(c)) {
-                while (!stack1.isEmpty() && stack1.top() != '(' &&
-                       prioritet(c) <= prioritet(stack1.top())) {
-                    finall << ' ' << stack1.top(); stack1.pop();
-                }
-                stack1.push(c);
-            }
-        }
-    }
-
-    while (!stack1.isEmpty()) {
-        finall << ' ' << stack1.top(); stack1.pop();
-    }
-
-    return finall.str();
+int precedence(char op) {
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    return 0;
+}
+bool isOperator(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/';
 }
 
-int eval(const std::string& pref) {
-    TStack<int, 100> stack2;
-    std::istringstream stream(pref);
+std::string infx2pstfx(const std::string& inf) {
+    TStack<char, 100> stack;
+    std::string output;
+    std::istringstream iss(inf);
     std::string currEl;
-    while (stream >> currEl) {
+
+    while (iss >> currEl) {
         if (std::isdigit(currEl[0])) {
-            stack2.push(std::stoi(currEl));
-        } else if (opperator(currEl[0]) && currEl.size() == 1) {
-            if (stack2.isEmpty()) {
-                std::cerr << "Error" << std::endl;
-                return 0;
+            output += currEl + " ";
+        } else if (currEl.size() == 1 && isOperator(currEl[0])) {
+            char op = currEl[0];
+            while (!stack.IsEmpty() && isOperator(stack.Top()) &&
+                precedence(stack.Top()) >= precedence(op)) {
+                output += stack.Top();
+                output += " ";
+                stack.Pop();
             }
-            int op2 = stack2.top(); stack2.pop();
-            if (stack2.isEmpty()) {
-                std::cerr << "Error" << std::endl;
-                return 0;
+            stack.Push(op);
+        } else if (currEl == "(") {
+            stack.Push('(');
+        } else if (currEl == ")") {
+            while (!stack.IsEmpty() && stack.Top() != '(') {
+                output += stack.Top();
+                output += " ";
+                stack.Pop();
             }
-            int op1 = stack2.top(); stack2.pop();
-            switch (currEl[0]) {
-                case '+': stack2.push(op1 + op2); break;
-                case '-': stack2.push(op1 - op2); break;
-                case '*': stack2.push(op1 * op2); break;
-                case '/':
-                    if (op2 == 0) {
-                        std::cerr << "Error" << std::endl;
-                        return 0;
-                    }
-                    stack2.push(op1 / op2);
-                    break;
-                default:
-                    std::cerr << "Error" << std::endl;
-                    return 0;
-            }
+            if (!stack.IsEmpty() && stack.Top() == '(')
+                stack.Pop();
         }
     }
+    while (!stack.IsEmpty()) {
+        output += stack.Top();
+        output += " ";
+        stack.Pop();
+    }
+    if (!output.empty() && output.back() == ' ')
+        output.pop_back();
 
-    if (stack2.isEmpty()) {
-        std::cerr << "Error" << std::endl;
-        return 0;
+    return output;
+}
+
+int eval(const std::string& post) {
+    TStack<int, 100> stack;
+    std::istringstream iss(post);
+    std::string currEl;
+
+    while (iss >> currEl) {
+        if (std::isdigit(currEl[0]) || (currEl.size() > 1 && currEl[0] == '-')) {
+            stack.Push(std::stoi(currEl));
+        } else if (currEl.size() == 1 && isOperator(currEl[0])) {
+            int b = stack.Top(); stack.Pop();
+            int a = stack.Top(); stack.Pop();
+            int res = 0;
+            switch (currEl[0]) {
+                case '+': res = a + b; break;
+                case '-': res = a - b; break;
+                case '': res = a  b; break;
+                case '/': 
+                    if (b == 0) throw std::runtime_error("Деление на ноль");
+                    res = a / b; 
+                    break;
+            }
+            stack.Push(res);
+        }
     }
-    int result = stack2.top(); stack2.pop();
-    if (!stack2.isEmpty()) {
-        std::cerr << "Error" << std::endl;
-        return 0;
-    }
-    return result;
+    return stack.Top();
 }
