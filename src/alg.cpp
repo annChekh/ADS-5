@@ -2,7 +2,8 @@
 #include <string>
 #include <map>
 #include <sstream>
-#include <iostream>
+#include <cctype>
+#include <stdexcept>
 #include "tstack.h"
 
 std::string infx2pstfx(const std::string& inf) {
