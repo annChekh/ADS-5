@@ -6,48 +6,44 @@
 #define INCLUDE_TSTACK_H_
 
 template<typename T, int size>
-class TStack  {
+class TStack {
  private:
-    std::array<T, max_size> items;
-    int current_index;
-
+    std::array<T, size> data;
+    int topIndex;
  public:
-    constexpr CustomStack() : current_index(-1) {}
+    TStack() : topIndex(-1) {}
 
-    bool is_empty() const {
-        return current_index < 0;
+    bool isEmpty() const noexcept {
+        return topIndex == -1;
     }
 
-    bool is_full() const {
-        return current_index >= max_size - 1;
+    bool isFull() const noexcept {
+        return topIndex == size - 1;
     }
 
-    void add_item(const T& value) {
-        if (is_full()) {
-            throw std::string("Stack is full");
+    void push(const T& value) {
+        if (isFull()) {
+            throw std::overflow_error("Stack overflow");
         }
-        items.at(++current_index) = value;
+        data[++topIndex] = value;
     }
 
-    void remove_item() {
-        if (is_empty()) {
-            throw std::string("Stack is empty");
+    T pop() {
+        if (isEmpty()) {
+            throw std::underflow_error("Stack underflow");
         }
-        --current_index;
+        return data[topIndex--];
     }
 
     const T& peek() const {
-        if (is_empty()) {
-            throw std::string("Stack is empty");
+        if (isEmpty()) {
+            throw std::logic_error("Stack is empty");
         }
-        return items.at(current_index);
+        return data[topIndex];
     }
 
-    T& peek() {
-        if (is_empty()) {
-            throw std::string("Stack is empty");
-        }
-        return items.at(current_index);  // Безопасный доступ к элементу массива
+    void clear() noexcept {
+        topIndex = -1;
     }
 };
 #endif  // INCLUDE_TSTACK_H_
