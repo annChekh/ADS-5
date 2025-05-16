@@ -6,7 +6,7 @@
 #include <map>
 #include "tstack.h"
 
-int prioritet(char op) {
+int prior(char op) {
     switch (op) {
         case '+': case '-': return 1;
         case '*': case '/': return 2;
@@ -45,7 +45,7 @@ std::string infx2pstfx(const std::string& inf) {
                 if (!st1.isEmpty()) st1.pop();
             } else if (opperator(c)) {
                 while (!st1.isEmpty() && st1.peek() != '(' &&
-                    prioritet(c) <= prioritet(st1.peek())) {
+                    prior(c) <= prior(st1.peek())) {
                     finall << ' ' << st1.pop();
                 }
                 st1.push(c);
@@ -59,43 +59,46 @@ std::string infx2pstfx(const std::string& inf) {
 }
 
 int eval(const std::string& pref) {
-    TStack<int, 100> stack2;
+    TStack<int, 100> stk2;
     std::istringstream stream(pref);
     std::string token;
     while (stream >> token) {
         if (std::isdigit(token[0])) {
-            stack2.push(std::stoi(token));
+            stk2.push(std::stoi(token));
         } else if (opperator(token[0]) && token.size() == 1) {
-            if (stack2.isEmpty()) {
-                throw std::invalid_argument("Not enough operands");
+            if (stk2.isEmpty()) {
+                throw std::invalid_argument("Not enough operandov");
             }
-            int oper2 = stack2.pop();
-            if (stack2.isEmpty()) {
-                throw std::invalid_argument("Not enough operands");
+            int oper2 = stk2.pop();
+            if (stk2.isEmpty()) {
+                throw std::invalid_argument("Not enough operandov");
             }
-            int oper1 = stack2.pop();
+            int oper1 = stk2.pop();
             switch (token[0]) {
-                case '+': stack2.push(oper1 + oper2);
+                case '+': 
+                    stk2.push(oper1 + oper2);
                     break;
-                case '-': stack2.push(oper1 - oper2);
+                case '-': 
+                    stk2.push(oper1 - oper2);
                     break;
-                case '*': stack2.push(oper1 * oper2);
+                case '*': 
+                    stk2.push(oper1 * oper2);
                     break;
                 case '/':
                     if (oper2 == 0) {
-                        throw std::runtime_error("Division by zero");
+                        throw std::runtime_error("Division by 0");
                     }
-                stack2.push(oper1 / oper2);
+                stk2.push(oper1 / oper2);
                 break;
             }
         }
     }
-    if (stack2.isEmpty()) {
+    if (stk2.isEmpty()) {
         throw std::invalid_argument("Empty expression");
     }
-    int result = stack2.pop();
-    if (!stack2.isEmpty()) {
-        throw std::invalid_argument("Too many operands");
+    int result = stk2.pop();
+    if (!stk2.isEmpty()) {
+        throw std::invalid_argument("Many operands");
     }
     return result;
 }
